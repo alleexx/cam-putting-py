@@ -183,6 +183,7 @@ orange2 = {'hmin': 3, 'smin': 181, 'vmin': 134, 'hmax': 40, 'smax': 255, 'vmax':
 orange3 = {'hmin': 0, 'smin': 73, 'vmin': 150, 'hmax': 40, 'smax': 255, 'vmax': 255}# test
 orange4 = {'hmin': 3, 'smin': 181, 'vmin': 216, 'hmax': 40, 'smax': 255, 'vmax': 255}# ps3eye
 #orange4 = {'hmin': 0, 'smin': 0, 'vmin': 147, 'hmax': 81, 'smax': 159, 'vmax': 255} janl?
+orange5 = {'hmin': 12, 'smin': 210, 'vmin': 178, 'hmax': 49, 'smax': 255, 'vmax': 255}#ekimnosneb
 
 calibrate = {}
 
@@ -207,6 +208,8 @@ if args.get("ballcolor", False):
         hsvVals = orange3
     elif args["ballcolor"] ==  "orange4":
         hsvVals = orange4
+    elif args["ballcolor"] == "orange5":
+        hsvVals = orange5
     elif args["ballcolor"] ==  "green":
         hsvVals = green 
     elif args["ballcolor"] ==  "green2":
@@ -223,7 +226,7 @@ if args["ballcolor"] is not None:
     print("Ballcolor: "+str(args["ballcolor"]))
 
     
-calibrationcolor = [("white",white),("white2",white2),("yellow",yellow),("yellow2",yellow2),("orange",orange),("orange2",orange2),("orange3",orange3),("orange4",orange4),("green",green),("green2",green2),("red",red),("red2",red2)]
+calibrationcolor = [("white",white),("white2",white2),("yellow",yellow),("yellow2",yellow2),("orange",orange),("orange2",orange2),("orange3",orange3),("orange4",orange4),("orange5",orange5),("green",green),("green2",green2),("red",red),("red2",red2)]
 
 def resizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None

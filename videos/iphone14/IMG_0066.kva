@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<KinoveaVideoAnalysis>
+  <FormatVersion>2.0</FormatVersion>
+  <Producer>Kinovea.0.9.5</Producer>
+  <OriginalFilename>IMG_0066</OriginalFilename>
+  <FullPath>D:\dev\Golf-Ball-Tracking-and-Speed-Detection\videos\iphone14\IMG_0066.MOV</FullPath>
+  <ImageSize>1920;1080</ImageSize>
+  <Mirror>false</Mirror>
+  <AverageTimeStampsPerFrame>11</AverageTimeStampsPerFrame>
+  <CaptureFramerate>209.069539219937</CaptureFramerate>
+  <UserFramerate>209.069539219937</UserFramerate>
+  <FirstTimeStamp>115</FirstTimeStamp>
+  <SelectionStart>115</SelectionStart>
+  <TimeOrigin>115</TimeOrigin>
+  <Calibration>
+    <CalibrationLine>
+      <Length>100</Length>
+      <Segment>
+        <A>960;540</A>
+        <B>1060;540</B>
+      </Segment>
+      <Origin>-420;520</Origin>
+      <Axis>LineHorizontal</Axis>
+    </CalibrationLine>
+    <CalibrationDrawingId>00000000-0000-0000-0000-000000000000</CalibrationDrawingId>
+    <Unit Abbreviation="px">Pixels</Unit>
+  </Calibration>
+  <Keyframes>
+    <Keyframe id="e79eee6d-cbf5-435a-9ddc-deb3ac4c1a45">
+      <Position UserTime="8.944">21583</Position>
+      <Title>8.944</Title>
+      <Drawings>
+        <Line id="9111249a-072b-4401-acbc-fb68a9d3ff24" name="Linie 1">
+          <Start>634.6614;367.8885</Start>
+          <End>1172.51;214.0637</End>
+          <ExtraData>None</ExtraData>
+          <MeasureLabel>
+            <SpacePosition>883.5857;240.9761</SpacePosition>
+            <TimePosition>0</TimePosition>
+          </MeasureLabel>
+          <DrawingStyle>
+            <Color Key="color">
+              <Value>255;255;127;0</Value>
+            </Color>
+            <LineSize Key="line size">
+              <Value>2</Value>
+            </LineSize>
+            <LineShape Key="line shape">
+              <Value>Solid</Value>
+            </LineShape>
+            <Arrows Key="arrows">
+              <Value>None</Value>
+            </Arrows>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserLength="559,41" UserLengthInvariant="559.41" UserUnitLength="px" />
+        </Line>
+        <Line id="d4ee148d-42c9-4db3-8e3c-b0966dc19950" name="Linie 2">
+          <Start>645.4184;366.8127</Start>
+          <End>1169.283;191.4741</End>
+          <ExtraData>None</ExtraData>
+          <MeasureLabel>
+            <SpacePosition>887.3507;229.1434</SpacePosition>
+            <TimePosition>0</TimePosition>
+          </MeasureLabel>
+          <DrawingStyle>
+            <Color Key="color">
+              <Value>255;255;127;0</Value>
+            </Color>
+            <LineSize Key="line size">
+              <Value>2</Value>
+            </LineSize>
+            <LineShape Key="line shape">
+              <Value>Solid</Value>
+            </LineShape>
+            <Arrows Key="arrows">
+              <Value>None</Value>
+            </Arrows>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserLength="552,43" UserLengthInvariant="552.43" UserUnitLength="px" />
+        </Line>
+        <Angle id="89517cea-c546-4805-ac1a-cdaa41f9e12f" name="Winkel 1">
+          <PointO>631.4343;372.1912</PointO>
+          <PointA>1205.857;179.6414</PointA>
+          <PointB>1176.813;211.9124</PointB>
+          <Signed>true</Signed>
+          <CCW>true</CCW>
+          <Supplementary>false</Supplementary>
+          <DrawingStyle>
+            <Color Key="line color">
+              <Value>255;0;153;153</Value>
+            </Color>
+            <FontSize Key="font size">
+              <Value>12</Value>
+            </FontSize>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserAngle="-2,15416" />
+        </Angle>
+        <Line id="c6b768a1-5779-4dba-a09e-359b67532f85" name="Linie 3">
+          <Start>602.3904;425.9761</Start>
+          <End>1549.004;421.6733</End>
+          <ExtraData>None</ExtraData>
+          <MeasureLabel>
+            <SpacePosition>1055.697;373.8247</SpacePosition>
+            <TimePosition>0</TimePosition>
+          </MeasureLabel>
+          <DrawingStyle>
+            <Color Key="color">
+              <Value>255;255;127;0</Value>
+            </Color>
+            <LineSize Key="line size">
+              <Value>2</Value>
+            </LineSize>
+            <LineShape Key="line shape">
+              <Value>Solid</Value>
+            </LineShape>
+            <Arrows Key="arrows">
+              <Value>None</Value>
+            </Arrows>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserLength="946,62" UserLengthInvariant="946.62" UserUnitLength="px" />
+        </Line>
+        <Line id="d92d7aed-6843-4a22-a673-52695fa51433" name="Linie 4">
+          <Start>602.3904;424.9004</Start>
+          <End>1511.355;187.1713</End>
+          <ExtraData>None</ExtraData>
+          <MeasureLabel>
+            <SpacePosition>1036.873;256.0359</SpacePosition>
+            <TimePosition>0</TimePosition>
+          </MeasureLabel>
+          <DrawingStyle>
+            <Color Key="color">
+              <Value>255;255;127;0</Value>
+            </Color>
+            <LineSize Key="line size">
+              <Value>2</Value>
+            </LineSize>
+            <LineShape Key="line shape">
+              <Value>Solid</Value>
+            </LineShape>
+            <Arrows Key="arrows">
+              <Value>None</Value>
+            </Arrows>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserLength="939,54" UserLengthInvariant="939.54" UserUnitLength="px" />
+        </Line>
+        <Angle id="cb4ca6a2-b0db-4579-a6a8-7767972b7fc2" name="Winkel 2">
+          <PointO>600.2391;423.8247</PointO>
+          <PointA>1514.582;186.0956</PointA>
+          <PointB>1565.139;420.5976</PointB>
+          <Signed>true</Signed>
+          <CCW>true</CCW>
+          <Supplementary>false</Supplementary>
+          <DrawingStyle>
+            <Color Key="line color">
+              <Value>255;0;153;153</Value>
+            </Color>
+            <FontSize Key="font size">
+              <Value>12</Value>
+            </FontSize>
+          </DrawingStyle>
+          <InfosFading>
+            <Enabled>true</Enabled>
+            <UseDefault>true</UseDefault>
+            <AlwaysVisible>true</AlwaysVisible>
+            <MasterFactor>1</MasterFactor>
+            <OpaqueFrames>1</OpaqueFrames>
+            <Frames>20</Frames>
+          </InfosFading>
+          <Measure UserAngle="-14,3826" />
+        </Angle>
+      </Drawings>
+    </Keyframe>
+  </Keyframes>
+  <CoordinateSystem id="79487c86-ec38-4c8c-92c5-d3434b65aa1a" name="Koordinatensystem 1">
+    <Visible>false</Visible>
+    <DrawingStyle>
+      <Color Key="line color">
+        <Value>255;255;0;0</Value>
+      </Color>
+    </DrawingStyle>
+  </CoordinateSystem>
+  <Trackability />
+</KinoveaVideoAnalysis>

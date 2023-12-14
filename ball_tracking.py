@@ -15,6 +15,8 @@ from configparser import ConfigParser
 import ast
 import os
 import shutil
+# For OCR Test
+import pytesseract
 
 parser = ConfigParser()
 CFG_FILE = 'config.ini'
@@ -64,6 +66,7 @@ noOfStarts = 0
 replayavail = False
 frameskip = 0
 
+resetinseconds = 0.5
 
 
 if parser.has_option('putting', 'startx1'):
@@ -326,10 +329,14 @@ outputframe = resizeWithAspectRatio(frame, width=int(args["resize"]))
 cv2.imshow("Putting View: Press q to exit / a for adv. settings", outputframe)
 
 # Create the color Finder object set to True if you need to Find the color
+debug = False
 
 if args.get("debug", False):
+    debug = True
     myColorFinder = ColorFinder(True)
     myColorFinder.setTrackbarValues(hsvVals)
+    if int(args["debug"]) == 0:
+        resetinseconds = 10
 else:
     myColorFinder = ColorFinder(False)
 
@@ -534,6 +541,32 @@ if type(video_fps) == float:
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out2 = cv2.VideoWriter('Calibration.mp4', apiPreference=0, fourcc=fourcc,fps=120, frameSize=(int(width), int(height)))
 
+# get grayscale image
+def get_grayscale(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# noise removal
+def remove_noise(image):
+    return cv2.medianBlur(image,5)
+ 
+#dilation
+def dilate(image):
+    kernel = np.ones((7,7),np.uint8)
+    return cv2.dilate(image, kernel, iterations = 2)
+    
+#erosion
+def erode(image):
+    kernel = np.ones((5,5),np.uint8)
+    return cv2.erode(image, kernel, iterations = 1)
+
+#opening - erosion followed by dilation
+def opening(image):
+    kernel = np.ones((5,5),np.uint8)
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+
+#canny edge detection
+def canny(image):
+    return cv2.Canny(image, 100, 200)
 
 
 def decode(myframe):
@@ -706,6 +739,195 @@ def yuv2rgb(yuv):
     rgb = np.dot(yuv, m)
     return rgb
 
+# combine lines which are close to each other from cv2 lines detection into one bigger line
+# check that only lines are combined which are close to each other
+def merge_and_group_lines(lines):
+    # Initialize an empty array of lists to store merged lines
+    merged_lines = []
+    # Create an empty list to store temporary line groups
+    temporary_groups = []
+
+    # Iterate over the lines
+    for line in lines:
+        # Calculate the orientation of the line
+    
+        # print("line[0]: "+str(line[0][0]))
+        # print("line[1]: "+str(line[0][1]))
+        # print("line[2]: "+str(line[0][2]))
+        # print("line[3]: "+str(line[0][3]))
+        orientation = np.arctan2(line[0][3] - line[0][1], line[0][2] - line[0][0])
+        # round orientation to 1 decimal place
+        orientation = round(orientation, 1)
+        
+        # Check if the line's orientation matches any existing group
+        found_match = False
+        for group in temporary_groups:
+            # Check if the line's orientation falls within a certain tolerance of the group's mean orientation
+            mean_orientation = np.mean([line[0][2] for line in group])
+            tolerance = np.pi / 12  # A tolerance of 15 degrees
+
+            if abs(orientation - mean_orientation) < tolerance:
+                group.append(line)
+                found_match = True
+                break
+
+        # If there's no match, create a new group
+        if not found_match:
+            temporary_groups.append([line])
+
+    # Merge the temporary groups into the final list of merged lines, add an enumerator
+    for i, group in enumerate(temporary_groups):
+        merged_lines.append(np.vstack(group))
+
+    return merged_lines
+
+# crop detailframe to x,y and radius and show contours
+def showCircleContours(x,y,radius,detailframe):
+    addRadius = 30
+
+    scaledx = int(width/(640/x))
+    scaledy = int(height/(360/y))
+    scaledradius = int(width/(640/radius))
+    actualwidth = 2*(scaledradius+addRadius)
+    actualheight = 2*(scaledradius+addRadius)
+    actualx = scaledx * (640/actualwidth/2)
+    actualy = scaledy * (360/actualheight/2)
+    actualradius = scaledradius * (640/actualwidth)
+    
+    #cv2.imshow("Original Frame no rezise", detailframe)
+    zoomframeorigin = detailframe[scaledy-scaledradius-addRadius:scaledy+scaledradius+addRadius, scaledx-scaledradius-addRadius:scaledx+scaledradius+addRadius]
+    #cv2.imshow("Detail Frame no rezise", zoomframeorigin)
+    zoomframe = zoomframeorigin.copy()
+    zoomframeorigin = imutils.resize(zoomframeorigin, width=640, height=360)
+    cv2.imshow("Detail Frame", zoomframeorigin)
+
+    # eliminate outer perimeter
+    # cv2.circle(zoomframe, (x, y), radius+1, (255, 255, 255), 3)
+    # zoom in for debug details
+    zoomframe = imutils.resize(zoomframe, width=640, height=360)
+    # cv2.imshow("Zoomframe after circle", zoomframe)
+
+    # Convert to gray
+    grayzoomframe = cv2.cvtColor(zoomframe, cv2.COLOR_BGR2GRAY)
+    # manipulate image to enhance texture
+
+    dilated_img = dilate(grayzoomframe.copy())
+    bg_img = cv2.medianBlur(dilated_img, 21)
+    diff_img = 255 - cv2.absdiff(grayzoomframe.copy(), bg_img)
+    norm_img = diff_img.copy() # Needed for 3.x compatibility
+    cv2.normalize(diff_img, norm_img, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+    _, thr_img = cv2.threshold(norm_img, 230, 0, cv2.THRESH_TRUNC)
+    cv2.normalize(thr_img, thr_img, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+    
+    # Show Threshold Image
+    if debug == True:
+        cv2.imshow("Detail Frame threshold", thr_img)
+
+    # convert zoomframe to show only black color in red
+    invertedimage = cv2.bitwise_not(thr_img)
+    
+
+    # show any light grey areas in mat invertedimage as white and every dark grey as black
+    seperator = 30
+    invertedimage[invertedimage <= seperator] = 0
+    invertedimage[invertedimage > seperator] = 255
+    if debug == True:
+        cv2.imshow("Detail Frame inverted", invertedimage)
+
+    # get contours in zoomframe
+    cnts = cv2.findContours(invertedimage.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    
+    
+    # find lines in invertedimage  
+    lines = cv2.HoughLinesP(invertedimage, 1, np.pi / 180, 100, minLineLength=50, maxLineGap=10)
+    # eliminate the line if it is on the radius
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            #calculate the distance between the line represented by x1, y1, x2, y2 and the center of the circle represented by scaledx and scaledy
+            distance = math.sqrt((x1+(x2-x1) - (actualx)) ** 2 + (y1+(y2-y1) - (actualy)) ** 2)
+            if distance < scaledradius + 10 and distance > scaledradius - 10:
+                #remove the line from the list of lines
+                lines = np.delete(lines, (np.where(lines == line)[0][0]), axis=0)
+                break
+
+    cv2.circle(zoomframeorigin, (int(actualx), int(actualy)), int(actualradius), (255, 255, 255), 3)
+    
+
+    # draw lines in zoomframe
+    addedshapes = zoomframeorigin.copy()
+   
+    # combine lines which are next to each other
+    combinedlines = merge_and_group_lines(lines)
+ 
+    if combinedlines is not None:
+        for linegroup in combinedlines:
+            x1, y1, x2, y2 = linegroup[0]
+            addedshapes = cv2.line(addedshapes, (x1, y1), (x2, y2), (255, 255, 0), 2)
+
+    cnts = imutils.grab_contours(cnts)
+    # draw contours in zoomframe
+    if cnts is not None:                
+        for cnt in cnts:
+            x, y, w, h = cv2.boundingRect(cnt)
+            # Drawing a rectangle on copied image
+            addedshapes = cv2.rectangle(addedshapes, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    # seperate the combinedlines into the cnts rectangles and draw them in different color per rectangle
+    cntrectangles = []
+    for cnt in cnts:
+        x, y, w, h = cv2.boundingRect(cnt)
+        cntrectangles.append((x, y, w, h))
+
+    # TODO: Add weighting system to choose best found line shapes in combinedlines
+
+    
+    resultlines = []
+    for linegroup in combinedlines:
+        x1, y1, x2, y2 = linegroup[0]
+        for cntrect in cntrectangles:
+            x, y, w, h = cntrect
+            
+            if x1 >= x and x1 <= x+w and y1 >= y and y1 <= y+h and x2 >= x and x2 <= x+w and y2 >= y and y2 <= y+h and x2-x1 > (w/2.5):
+                #cv2.line(zoomframeorigin, (x1, y1), (x2, y2), (0, 0, 255), 1)
+                resultlines.append((x1, y1, x2, y2))
+
+    # get the mean values out of resultlines
+    angle = 0
+    x1 = 0
+    x2 = 0
+    y1 = 0
+    y2 = 0
+    if len(resultlines) > 0:
+        sumx1 = 0
+        sumx2 = 0
+        sumy1 = 0
+        sumy2 = 0
+        for i, resultline in enumerate(resultlines):
+            x1, y1, x2, y2 = resultline
+            sumx1 = sumx1 + x1
+            sumx2 = sumx2 + x2
+            sumy1 = sumy1 + y1
+            sumy2 = sumy2 + y2
+        x1 = int(sumx1/len(resultlines))
+        x2 = int(sumx2/len(resultlines))
+        y1 = int(sumy1/len(resultlines))
+        y2 = int(sumy2/len(resultlines))
+        angle = (GetAngle((x1,y1),(x2,y2))*-1)
+        # print angle on mat
+        drawtexty = y1
+        cv2.putText(zoomframeorigin, str(angle), (x1, drawtexty), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        print("Detected Shape Angle: "+str(angle))
+        cv2.line(zoomframeorigin, (x1, y1), (x2, y2), (0, 255, 0), 1)
+        cv2.line(zoomframeorigin, (x1, y1), (x2, y1), (0, 255, 0), 1)
+    if debug == True:
+        cv2.imshow("Added Shapes", addedshapes)
+
+    
+    # return image with the markings
+    return zoomframeorigin, angle, (x1,x2,y1,y2)
+
 # allow the camera or video file to warm up
 time.sleep(0.5)
 
@@ -812,7 +1034,7 @@ while True:
             cv2.imshow("Putting View: Press q to exit / a for adv. settings", frame)
             cv2.waitKey(0)
             break
-
+    # Save original version of frame
     origframe = frame.copy()
     
     
@@ -826,8 +1048,6 @@ while True:
     # resize the frame, blur it, and convert it to the HSV
     # color space
     frame = imutils.resize(frame, width=640, height=360)
-    #origframe2 = imutils.resize(origframe2, width=640, height=360) 
-    #origframe = imutils.resize(frame, width=640, height=360)  
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
@@ -981,7 +1201,10 @@ while True:
                                     left = False
                                     # update the points and tims queues
                                     pts.appendleft(center)
-                                    tims.appendleft(frameTime)  
+                                    tims.appendleft(frameTime) 
+                                    global zoomframe1
+                                    zoomframe1, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startCircle[0],startCircle[1], startCircle[2],origframe)
+                                     
                                     global replay1
                                     global replay2
 
@@ -1000,6 +1223,8 @@ while True:
                                 # update the points and tims queues
                                 pts.appendleft(center)
                                 tims.appendleft(frameTime)
+                                global zoomframe2
+                                zoomframe2, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startPos[0],startPos[1], startCircle[2],origframe)
                                 
                                 break
                             else:
@@ -1025,6 +1250,8 @@ while True:
                                         print("Ball Left. Position: "+str(center))
                                         left = True
                                         endPos = center
+                                        global zoomframe3
+                                        zoomframe3, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(endPos[0],endPos[1], startCircle[2],origframe)
                                         # calculate the distance traveled by the ball in pixel
                                         a = endPos[0] - startPos[0]
                                         b = endPos[1] - startPos[1]
@@ -1076,7 +1303,7 @@ while True:
     if left == True:
 
         # Send Shot Data
-        if (tim2 and timeSinceEntered > 0.5 and distanceTraveledMM and timeElapsedSeconds and speed >= 0.5 and speed <= 25):
+        if (tim2 and timeSinceEntered > resetinseconds and distanceTraveledMM and timeElapsedSeconds and speed >= 0.5 and speed <= 25):
             print("----- Shot Complete --------")
             print("Time Elapsed in Sec: "+str(timeElapsedSeconds))
             print("Distance travelled in MM: "+str(distanceTraveledMM))
@@ -1143,7 +1370,7 @@ while True:
             # Further clearing - startPos, endPos
     else:
         # Send Shot Data
-        if (tim1 and timeSinceEntered > 0.5):
+        if (tim1 and timeSinceEntered > resetinseconds):
             print("----- Data reset --------")
             started = False
             entered = False
@@ -1179,16 +1406,17 @@ while True:
     if started:
         cv2.circle(frame, (startCircle[0],startCircle[1]), startCircle[2],(0, 0, 255), 2)
         cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1) 
+        cv2.imshow("zoom1",zoomframe1)
 
     # Mark Entered Circle
     if entered:
-        cv2.circle(frame, (startPos), startCircle[2],(0, 0, 255), 2)
-        cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1)  
+        cv2.circle(frame, (startPos), startCircle[2],(0, 0, 255), 2) 
+        cv2.imshow("zoom2",zoomframe2)
 
     # Mark Exit Circle
     if left:
-        cv2.circle(frame, (endPos), startCircle[2],(0, 0, 255), 2)
-        cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1)  
+        cv2.circle(frame, (endPos), startCircle[2],(0, 0, 255), 2) 
+        cv2.imshow("zoom3",zoomframe3)
 
     if flipView:	
        frame = cv2.flip(frame, -1)
@@ -1391,6 +1619,7 @@ while True:
             myColorFinder = ColorFinder(True)
             myColorFinder.setTrackbarValues(hsvVals)
             d_key_pressed = True
+            debug = True
         else:
             args["debug"] = 0            
             myColorFinder = ColorFinder(False)
@@ -1398,6 +1627,7 @@ while True:
             cv2.destroyWindow("MaskFrame")
             cv2.destroyWindow("TrackBars")
             d_key_pressed = False
+            debug = False
 
     if actualFPS > 1:
         grayPreviousFrame = cv2.cvtColor(previousFrame, cv2.COLOR_BGR2GRAY)

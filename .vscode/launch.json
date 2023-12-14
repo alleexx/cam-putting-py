@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             //"args": ["-c=orange2","-w=1","-d=1"]// "-v=Calibration-green4.mp4"  "-i=green2.jpg"
-            "args": ["-c=white","-w=3","-r=640"]// "-v=Calibration_1080p_True_60fps.mp4"  "-i=green2.jpg"  ,"-d=1"
+            "args": ["-c=orange2","-w=3","-r=1280", "-v=240spin.mp4", "-d=0"]//  "-i=green2.jpg"  ,"-d=1"
         }
     ]
 }

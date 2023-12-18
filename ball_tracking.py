@@ -809,8 +809,8 @@ def showCircleContours(x,y,radius,detailframe):
     actualy = int(actualheight/2)
     
     zoomframe = zoomframeorigin.copy()
-    
-    cv2.imshow("Detail Frame", imutils.resize(zoomframeorigin, width=640, height=360))
+    if debug == True:
+        cv2.imshow("Detail Frame", imutils.resize(zoomframeorigin, width=640, height=360))
 
     # eliminate outer perimeter
     # cv2.circle(zoomframe, (x, y), radius+1, (255, 255, 255), 3)

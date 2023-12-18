@@ -203,6 +203,15 @@ calibrationTimeFrame = 30
 
 record = True
 
+# Spin
+deltaangle = 0
+shapeangle1 = 0
+shapeangle2 = 0
+shapeangle3 = 0
+spin1 = False
+spin2 = False
+spin3 = False
+
 # Videofile Indicator
 
 videofile = False
@@ -783,32 +792,36 @@ def merge_and_group_lines(lines):
 
 # crop detailframe to x,y and radius and show contours
 def showCircleContours(x,y,radius,detailframe):
-    addRadius = 30
 
-    scaledx = int(width/(640/x))
-    scaledy = int(height/(360/y))
-    scaledradius = int(width/(640/radius))
-    actualwidth = 2*(scaledradius+addRadius)
-    actualheight = 2*(scaledradius+addRadius)
-    actualx = scaledx * (640/actualwidth/2)
-    actualy = scaledy * (360/actualheight/2)
-    actualradius = scaledradius * (640/actualwidth)
+    scaledx = int(width/(frame.shape[1]/x))
+    scaledy = int(height/(frame.shape[0]/y))
+    scaledradius = int(width/(frame.shape[1]/radius))
+    addRadius = int(scaledradius/10)
+    scalingfactor = (scaledradius+addRadius)/radius
+    # Scalingfactor for line detection zoom
+    scalingfactor2 = 10
     
     #cv2.imshow("Original Frame no rezise", detailframe)
     zoomframeorigin = detailframe[scaledy-scaledradius-addRadius:scaledy+scaledradius+addRadius, scaledx-scaledradius-addRadius:scaledx+scaledradius+addRadius]
-    #cv2.imshow("Detail Frame no rezise", zoomframeorigin)
+    actualwidth = int(scaledradius+addRadius)*2
+    actualheight = int(scaledradius+addRadius)*2
+    actualx = int(actualwidth/2)
+    actualy = int(actualheight/2)
+    
     zoomframe = zoomframeorigin.copy()
-    zoomframeorigin = imutils.resize(zoomframeorigin, width=640, height=360)
-    cv2.imshow("Detail Frame", zoomframeorigin)
+    
+    cv2.imshow("Detail Frame", imutils.resize(zoomframeorigin, width=640, height=360))
 
     # eliminate outer perimeter
     # cv2.circle(zoomframe, (x, y), radius+1, (255, 255, 255), 3)
     # zoom in for debug details
-    zoomframe = imutils.resize(zoomframe, width=640, height=360)
+    # zoomframe = imutils.resize(zoomframe, width=640, height=360)
     # cv2.imshow("Zoomframe after circle", zoomframe)
 
     # Convert to gray
     grayzoomframe = cv2.cvtColor(zoomframe, cv2.COLOR_BGR2GRAY)
+    grayzoomframe = imutils.resize(grayzoomframe, width=(actualwidth*scalingfactor2), height=(actualheight*scalingfactor2))
+
     # manipulate image to enhance texture
 
     dilated_img = dilate(grayzoomframe.copy())
@@ -819,10 +832,15 @@ def showCircleContours(x,y,radius,detailframe):
     _, thr_img = cv2.threshold(norm_img, 230, 0, cv2.THRESH_TRUNC)
     cv2.normalize(thr_img, thr_img, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
 
+    # Remove the edge from the original ball
+    cv2.circle(thr_img, (int(actualx), int(actualy)), int(scaledradius), (255, 255, 255), 2)
+    cv2.circle(thr_img, (int(actualx), int(actualy)), int(scaledradius+2), (255, 255, 255), 2)
+    cv2.circle(thr_img, (int(actualx), int(actualy)), int(scaledradius+4), (255, 255, 255), 2)
+    cv2.circle(thr_img, (int(actualx), int(actualy)), int(scaledradius+6), (255, 255, 255), 2)
     
     # Show Threshold Image
     if debug == True:
-        cv2.imshow("Detail Frame threshold", thr_img)
+        cv2.imshow("Detail Frame threshold", imutils.resize(thr_img, width=640, height=360))
 
     # convert zoomframe to show only black color in red
     invertedimage = cv2.bitwise_not(thr_img)
@@ -833,44 +851,75 @@ def showCircleContours(x,y,radius,detailframe):
     invertedimage[invertedimage <= seperator] = 0
     invertedimage[invertedimage > seperator] = 255
     if debug == True:
-        cv2.imshow("Detail Frame inverted", invertedimage)
+        cv2.imshow("Detail Frame inverted", imutils.resize(invertedimage, width=640, height=360))
 
     # get contours in zoomframe
     cnts = cv2.findContours(invertedimage.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     
     
-    # find lines in invertedimage  
-    lines = cv2.HoughLinesP(invertedimage, 1, np.pi / 180, 100, minLineLength=50, maxLineGap=10)
+    # find lines in invertedimage
+    myLineLength = int(scaledradius/10)  
+
+    lines = cv2.HoughLinesP(invertedimage, 1, np.pi / 180, 100, minLineLength=myLineLength, maxLineGap=10)
+    if debug == True:
+        line_img = zoomframeorigin.copy()
+        if lines is not None:
+            for linegroup in lines:
+                x1, y1, x2, y2 = linegroup[0]
+                x1 = int(x1/scalingfactor2)
+                y1 = int(y1/scalingfactor2)
+                x2 = int(x2/scalingfactor2)
+                y2 = int(y2/scalingfactor2)
+                line_img = cv2.line(line_img, (x1, y1), (x2, y2), (255, 255, 255), 1)
+        cv2.imshow("Detail Frame lines", imutils.resize(line_img, width=640, height=360))
     # eliminate the line if it is on the radius
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
+            x1 = int(x1/scalingfactor2)
+            y1 = int(y1/scalingfactor2)
+            x2 = int(x2/scalingfactor2)
+            y2 = int(y2/scalingfactor2)
             #calculate the distance between the line represented by x1, y1, x2, y2 and the center of the circle represented by scaledx and scaledy
-            distance = math.sqrt((x1+(x2-x1) - (actualx)) ** 2 + (y1+(y2-y1) - (actualy)) ** 2)
-            if distance < scaledradius + 10 and distance > scaledradius - 10:
-                #remove the line from the list of lines
-                lines = np.delete(lines, (np.where(lines == line)[0][0]), axis=0)
-                break
 
-    cv2.circle(zoomframeorigin, (int(actualx), int(actualy)), int(actualradius), (255, 255, 255), 3)
+            distanceline = math.sqrt((y2-y1)** 2 + (x2-x1) ** 2)
+            distancetox1y1 = math.sqrt((actualy-y1)** 2 + (actualx-x1) ** 2)
+            distancetox2y2 = math.sqrt((actualy-y2)** 2 + (actualx-x2) ** 2)
+            
+            if distancetox1y1 < scaledradius + 10 and distancetox1y1 > scaledradius - 10:
+                if distancetox2y2 < scaledradius + 10 and distancetox2y2 > scaledradius - 10:
+                    #remove the line from the list of lines
+                    lines = np.delete(lines, (np.where(lines == line)[0][0]), axis=0)
+                    break
+
+    
     
 
     # draw lines in zoomframe
     addedshapes = zoomframeorigin.copy()
-   
+
     # combine lines which are next to each other
-    combinedlines = merge_and_group_lines(lines)
+    if lines is not None:
+        lines = merge_and_group_lines(lines)
  
-    if combinedlines is not None:
-        for linegroup in combinedlines:
-            x1, y1, x2, y2 = linegroup[0]
-            addedshapes = cv2.line(addedshapes, (x1, y1), (x2, y2), (255, 255, 0), 2)
+        if lines is not None:
+            for linegroup in lines:
+                x1, y1, x2, y2 = linegroup[0]
+                x1 = int(x1/scalingfactor2)
+                y1 = int(y1/scalingfactor2)
+                x2 = int(x2/scalingfactor2)
+                y2 = int(y2/scalingfactor2)
+                addedshapes = cv2.line(addedshapes, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
     cnts = imutils.grab_contours(cnts)
     # draw contours in zoomframe
     if cnts is not None:                
         for cnt in cnts:
             x, y, w, h = cv2.boundingRect(cnt)
+            x = int(x/scalingfactor2)
+            y = int(y/scalingfactor2)
+            w = int(w/scalingfactor2)
+            h = int(h/scalingfactor2)
             # Drawing a rectangle on copied image
             addedshapes = cv2.rectangle(addedshapes, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
@@ -878,20 +927,29 @@ def showCircleContours(x,y,radius,detailframe):
     cntrectangles = []
     for cnt in cnts:
         x, y, w, h = cv2.boundingRect(cnt)
+        x = int(x/scalingfactor2)
+        y = int(y/scalingfactor2)
+        w = int(w/scalingfactor2)
+        h = int(h/scalingfactor2)
         cntrectangles.append((x, y, w, h))
 
     # TODO: Add weighting system to choose best found line shapes in combinedlines
 
     
     resultlines = []
-    for linegroup in combinedlines:
-        x1, y1, x2, y2 = linegroup[0]
-        for cntrect in cntrectangles:
-            x, y, w, h = cntrect
-            
-            if x1 >= x and x1 <= x+w and y1 >= y and y1 <= y+h and x2 >= x and x2 <= x+w and y2 >= y and y2 <= y+h and x2-x1 > (w/2.5):
-                #cv2.line(zoomframeorigin, (x1, y1), (x2, y2), (0, 0, 255), 1)
-                resultlines.append((x1, y1, x2, y2))
+    if lines is not None:
+        for linegroup in lines:
+            x1, y1, x2, y2 = linegroup[0]
+            x1 = int(x1/scalingfactor2)
+            y1 = int(y1/scalingfactor2)
+            x2 = int(x2/scalingfactor2)
+            y2 = int(y2/scalingfactor2)
+            for cntrect in cntrectangles:
+                x, y, w, h = cntrect
+                
+                if x1 >= x and x1 <= x+w and y1 >= y and y1 <= y+h and x2 >= x and x2 <= x+w and y2 >= y and y2 <= y+h and x2-x1 > (w/3):
+                    addedshapes = cv2.line(addedshapes, (x1, y1), (x2, y2), (0, 0, 0), 2)
+                    resultlines.append((x1, y1, x2, y2))
 
     # get the mean values out of resultlines
     angle = 0
@@ -922,11 +980,11 @@ def showCircleContours(x,y,radius,detailframe):
         cv2.line(zoomframeorigin, (x1, y1), (x2, y2), (0, 255, 0), 1)
         cv2.line(zoomframeorigin, (x1, y1), (x2, y1), (0, 255, 0), 1)
     if debug == True:
-        cv2.imshow("Added Shapes", addedshapes)
+        cv2.imshow("Added Shapes", imutils.resize(addedshapes, width=640, height=360))
 
     
     # return image with the markings
-    return zoomframeorigin, angle, (x1,x2,y1,y2)
+    return zoomframeorigin, angle, (x1/scalingfactor,x2/scalingfactor,y1/scalingfactor,y2/scalingfactor)
 
 # allow the camera or video file to warm up
 time.sleep(0.5)
@@ -1203,8 +1261,10 @@ while True:
                                     pts.appendleft(center)
                                     tims.appendleft(frameTime) 
                                     global zoomframe1
-                                    zoomframe1, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startCircle[0],startCircle[1], startCircle[2],origframe)
-                                     
+                                    zoomframe1, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startCircle[0],startCircle[1], startCircle[2],origframe)
+                                    if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0:
+                                        spin1 = True
+                                        shapeangle1 = zoomangle
                                     global replay1
                                     global replay2
 
@@ -1224,7 +1284,12 @@ while True:
                                 pts.appendleft(center)
                                 tims.appendleft(frameTime)
                                 global zoomframe2
-                                zoomframe2, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startPos[0],startPos[1], startCircle[2],origframe)
+                                zoomframe2, shapeangle2, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startPos[0],startPos[1], startCircle[2],origframe)
+                                if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0:
+                                    spin2 = True
+                                    shapeangle2 = zoomangle
+                                    if spin1 == True:
+                                        deltaangle = shapeangle2 - shapeangle1
                                 
                                 break
                             else:
@@ -1251,7 +1316,12 @@ while True:
                                         left = True
                                         endPos = center
                                         global zoomframe3
-                                        zoomframe3, shapeangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(endPos[0],endPos[1], startCircle[2],origframe)
+                                        zoomframe3, shapeangle3, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(endPos[0],endPos[1], startCircle[2],origframe)
+                                        if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0:
+                                            spin3 = True
+                                            shapeangle3 = zoomangle
+                                            if spin1 == True and spin2 != True:
+                                                deltaangle = shapeangle3 - shapeangle1
                                         # calculate the distance traveled by the ball in pixel
                                         a = endPos[0] - startPos[0]
                                         b = endPos[1] - startPos[1]
@@ -1405,18 +1475,34 @@ while True:
         # Mark Start Circle
     if started:
         cv2.circle(frame, (startCircle[0],startCircle[1]), startCircle[2],(0, 0, 255), 2)
-        cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1) 
-        cv2.imshow("zoom1",zoomframe1)
+        cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1)
+        if spin1 == True:
+            linepos1 = (startCircle[0],startCircle[1])
+            linepos2 = (int(startCircle[0]+(startCircle[2]*math.cos(shapeangle1))),int(startCircle[1]+(startCircle[2]*math.sin(shapeangle1))))
+            cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
+        if debug == True:
+            cv2.imshow("zoom1",zoomframe1)
 
     # Mark Entered Circle
     if entered:
         cv2.circle(frame, (startPos), startCircle[2],(0, 0, 255), 2) 
-        cv2.imshow("zoom2",zoomframe2)
+        if spin2 == True:
+            linepos1 = startPos
+            linepos2 = (int(startPos[0]+(startCircle[2]*math.cos(shapeangle2))),int(startPos[1]+(startCircle[2]*math.sin(shapeangle2))))
+            cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
+        if debug == True:
+            cv2.imshow("zoom2",zoomframe2)
 
     # Mark Exit Circle
     if left:
-        cv2.circle(frame, (endPos), startCircle[2],(0, 0, 255), 2) 
-        cv2.imshow("zoom3",zoomframe3)
+        cv2.circle(frame, (endPos), startCircle[2],(0, 0, 255), 2)
+        # draw a line from endPos with the angle shapeangle3 and  length as startCircle[2]
+        if spin3 == True:
+            linepos1 = endPos
+            linepos2 = (int(endPos[0]+(startCircle[2]*math.cos(shapeangle3))),int(endPos[1]+(startCircle[2]*math.sin(shapeangle3))))
+            cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
+        if debug == True:
+            cv2.imshow("zoom3",zoomframe3)
 
     if flipView:	
        frame = cv2.flip(frame, -1)
@@ -1429,6 +1515,11 @@ while True:
         cv2.putText(frame,"Last Shot",(400,40),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255),1)
         cv2.putText(frame,"Ball Speed: %.2f" % lastShotSpeed+" MPH",(400,60),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255),1)
         cv2.putText(frame,"HLA:  %.2f" % lastShotHLA+" Degrees",(400,80),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255),1)
+
+    if not deltaangle == 0:
+        cv2.putText(frame,"Est. Spin Axis:  %.2f" % deltaangle+" Degrees",(400,100),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255),1)
+        print("Est. Spin Axis:", deltaangle)
+
     
     if ballradius == 0:
         cv2.putText(frame,"radius:"+str(startCircle[2]),(20,80),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255))

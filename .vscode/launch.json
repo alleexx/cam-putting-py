@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             //"args": ["-c=orange2","-w=1","-d=1"]// "-v=Calibration-green4.mp4"  "-i=green2.jpg"
-            "args": ["-c=orange2","-w=3","-r=1280"]// , "-v=spin-cw.mp4", "-d=1"]//  "-i=green2.jpg"  ,"-d=1"
+            "args": ["-c=orange2","-w=3","-r=1280", "-v=spin-cw2.mp4", "-d=0"]//  "-i=green2.jpg"  ,"-d=1"
         }
     ]
 }

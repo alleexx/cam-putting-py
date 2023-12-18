@@ -796,7 +796,7 @@ def showCircleContours(x,y,radius,detailframe):
     scaledx = int(width/(frame.shape[1]/x))
     scaledy = int(height/(frame.shape[0]/y))
     scaledradius = int(width/(frame.shape[1]/radius))
-    addRadius = int(scaledradius/10)
+    addRadius = (int(scaledradius/4)*-1)
     scalingfactor = (scaledradius+addRadius)/radius
     # Scalingfactor for line detection zoom
     scalingfactor2 = 10
@@ -1478,7 +1478,7 @@ while True:
         cv2.circle(frame, (startCircle[0],startCircle[1]), 5, (0, 0, 255), -1)
         if spin1 == True:
             linepos1 = (startCircle[0],startCircle[1])
-            linepos2 = (int(startCircle[0]+(startCircle[2]*math.cos(shapeangle1))),int(startCircle[1]+(startCircle[2]*math.sin(shapeangle1))))
+            linepos2 = (int(startCircle[0]+(startCircle[2]*math.cos(math.radians(shapeangle1)))),int(startCircle[1]+(startCircle[2]*math.sin(math.radians(shapeangle1)))))
             cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
         if debug == True:
             cv2.imshow("zoom1",zoomframe1)
@@ -1488,7 +1488,7 @@ while True:
         cv2.circle(frame, (startPos), startCircle[2],(0, 0, 255), 2) 
         if spin2 == True:
             linepos1 = startPos
-            linepos2 = (int(startPos[0]+(startCircle[2]*math.cos(shapeangle2))),int(startPos[1]+(startCircle[2]*math.sin(shapeangle2))))
+            linepos2 = (int(startPos[0]+(startCircle[2]*math.cos(math.radians(shapeangle2)))),int(startPos[1]+(startCircle[2]*math.sin(math.radians(shapeangle2)))))
             cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
         if debug == True:
             cv2.imshow("zoom2",zoomframe2)
@@ -1499,7 +1499,7 @@ while True:
         # draw a line from endPos with the angle shapeangle3 and  length as startCircle[2]
         if spin3 == True:
             linepos1 = endPos
-            linepos2 = (int(endPos[0]+(startCircle[2]*math.cos(shapeangle3))),int(endPos[1]+(startCircle[2]*math.sin(shapeangle3))))
+            linepos2 = (int(endPos[0]+(startCircle[2]*math.cos(math.radians(shapeangle3)))),int(endPos[1]+(startCircle[2]*math.sin(math.radians(shapeangle3)))))
             cv2.line(frame, (linepos1), (linepos2),(0, 0, 255), 2)
         if debug == True:
             cv2.imshow("zoom3",zoomframe3)

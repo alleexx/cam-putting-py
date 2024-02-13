@@ -10,10 +10,10 @@ Discription:Secondary development of pythonsdk of Daheng camera.
 
 def main():
     
-    Width_set = 1440 # Set the resolution width
-    Height_set = 1080 # Set high resolution
-    framerate_set = 192 # Set frame rate
-    num = 1000 # Acquisition frame rate times (for debugging purposes, you can set the subsequent image acquisition to a while loop for unlimited loop acquisition)
+    Width_set = 600 # Set the resolution width
+    Height_set = 300 # Set high resolution
+    framerate_set = 750 # Set frame rate
+    num = 10000 # Acquisition frame rate times (for debugging purposes, you can set the subsequent image acquisition to a while loop for unlimited loop acquisition)
 
     
     counter = 0
@@ -69,7 +69,7 @@ def main():
     # cam.TriggerSource.set(gx.GxTriggerSourceEntry.SOFTWARE)
 
     # set exposure
-    cam.ExposureTime.set(5000.0)
+    cam.ExposureTime.set(250.0)
 
     # set gain
     cam.Gain.set(24.0)

@@ -30,6 +30,7 @@ profiling = False
 step = ""
 stepId = 0
 profiling_data = []
+calcSpin = False
 
 # Global Objects
 
@@ -612,8 +613,8 @@ def getFrames(child_frame_conn, framequeue, maincamtype):
     if maincamtype == 2:
         webcamindex = 1 # Number of Webcamindex
 
-        Width_set = 640 # Set the resolution width
-        Height_set = 360 # Set high resolution
+        Width_set = 600 # Set the resolution width
+        Height_set = 300 # Set high resolution
         framerate_set = 300 # Set frame rate
 
         gain = 24
@@ -1246,9 +1247,9 @@ def main():
         vs.set(cv2.CAP_PROP_AUTOFOCUS,autofocus)
 
     if maincamtype == 2:
-        width = 1440
-        height = 1080
-        video_fps = 192
+        width = 600
+        height = 300
+        video_fps = 300
 
 
     print("video_fps: "+str(video_fps))
@@ -1652,10 +1653,11 @@ def main():
                                         tims.appendleft(frameTime) 
                                         global zoomframe1
                                         deltaangle = 0
-                                        zoomframe1, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startCircle[0],startCircle[1], startCircle[2],origframe,frame)
-                                        if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
-                                            spin1 = True
-                                            shapeangle1 = zoomangle
+                                        if calcSpin == True:
+                                            zoomframe1, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startCircle[0],startCircle[1], startCircle[2],origframe,frame)
+                                            if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
+                                                spin1 = True
+                                                shapeangle1 = zoomangle
                                         global replay1
                                         global replay2
 
@@ -1683,13 +1685,15 @@ def main():
                                     pts.appendleft(center)
                                     tims.appendleft(frameTime)
                                     global zoomframe2
-                                    zoomframe2, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startPos[0],startPos[1], startCircle[2],origframe,frame)
-                                    if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
-                                        spin2 = True
-                                        shapeangle2 = zoomangle
-                                        if spin1 == True:
-                                            deltaangle = shapeangle2 - shapeangle1
                                     
+                                    if calcSpin == True:
+                                        zoomframe2, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(startPos[0],startPos[1], startCircle[2],origframe,frame)
+                                        if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
+                                            spin2 = True
+                                            shapeangle2 = zoomangle
+                                            if spin1 == True:
+                                                deltaangle = shapeangle2 - shapeangle1
+                                        
                                     break
                                 else:
                                     if ( x > coord[1][0] and entered == True and started == True):
@@ -1720,13 +1724,15 @@ def main():
                                             left = True
                                             endPos = center
                                             global zoomframe3
-                                            zoomframe3, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(endPos[0],endPos[1], startCircle[2],origframe,frame)
-                                            if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
-                                                spin3 = True
-                                                shapeangle3 = zoomangle
-                                                if spin1 == True and deltaangle == 0:
-                                                    # TODO: Check the timings between the frames for shapeangle - Delta should only be between consecutive frames --> Deltaangle / number of frames
-                                                    deltaangle = shapeangle3 - shapeangle1
+                                            
+                                            if calcSpin == True:
+                                                zoomframe3, zoomangle, (shapex1,shapex2,shapey1,shapey2) = showCircleContours(endPos[0],endPos[1], startCircle[2],origframe,frame)
+                                                if shapex1 != 0 and shapex2 != 0 and shapey1 != 0 and shapey2 != 0 and zoomangle != 0:
+                                                    spin3 = True
+                                                    shapeangle3 = zoomangle
+                                                    if spin1 == True and deltaangle == 0:
+                                                        # TODO: Check the timings between the frames for shapeangle - Delta should only be between consecutive frames --> Deltaangle / number of frames
+                                                        deltaangle = shapeangle3 - shapeangle1
                                             # calculate the distance traveled by the ball in pixel
                                             a = endPos[0] - startPos[0]
                                             b = endPos[1] - startPos[1]

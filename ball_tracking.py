@@ -614,8 +614,14 @@ def getFrames(child_frame_conn, framequeue, maincamtype):
         webcamindex = 1 # Number of Webcamindex
 
         Width_set = 600 # Set the resolution width
-        Height_set = 300 # Set high resolution
+        Height_set = 300 # Set the resolution height
         framerate_set = 300 # Set frame rate
+        offset_x = 550
+        offset_y = 500
+
+        #Position offset
+
+
 
         gain = 24
         exposure = 5000
@@ -636,6 +642,10 @@ def getFrames(child_frame_conn, framequeue, maincamtype):
         #Set width and height
         device.Width.set(Width_set)
         device.Height.set(Height_set)
+
+        #Set offset
+        device.OffsetX.set(offset_x)
+        device.OffsetY.set(offset_y)
 
         # Grayscale Mode ON/OFF
         device.SaturationMode.set(gx.GxSwitchEntry.OFF)

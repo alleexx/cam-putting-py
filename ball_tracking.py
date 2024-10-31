@@ -612,12 +612,12 @@ def getFrames(child_frame_conn, framequeue, maincamtype):
     if maincamtype == 2:
         webcamindex = 1 # Number of Webcamindex
 
-        Width_set = 1440 # Set the resolution width
-        Height_set = 1080 # Set high resolution
-        framerate_set = 192 # Set frame rate
+        Width_set = 640 # Set the resolution width
+        Height_set = 360 # Set high resolution
+        framerate_set = 300 # Set frame rate
 
-        gain = 12
-        exposure = 4000
+        gain = 24
+        exposure = 5000
 
         counter = 0
         last_frame_id = 0
@@ -1761,7 +1761,7 @@ def main():
                     continue
                 # otherwise, compute the thickness of the line and
                 # draw the connecting lines 
-                cv2.line(frame, pts[i - 1], pts[i], (0, 0, 150), thickness)
+                cv2.line(frame, pts[i - 1], pts[i], (0, 0, 150), 1)
                 
 
 

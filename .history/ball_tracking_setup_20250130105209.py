@@ -1,3 +1,4 @@
+# import the necessary packages
 from collections import deque
 import numpy as np
 import argparse
@@ -12,21 +13,6 @@ from decimal import *
 import requests
 from configparser import ConfigParser
 import ast
-import google.generativeai as genai  # Import Gemini API
-import tkinter as tk
-from tkinter import ttk, messagebox
-import base64
-import json
-import threading
-
-parser = ConfigParser()  
-CFG_FILE = 'config-priv.ini'
-
-parser.read(CFG_FILE)
-if parser.has_option('putting', 'gemini_token'):
-    gemini_token = parser.get('putting', 'gemini_token')
-else:
-    gemini_token = ""  # Or handle the missing token case differently
 
 parser = ConfigParser()
 CFG_FILE = 'config.ini'
@@ -34,87 +20,6 @@ CFG_FILE = 'config.ini'
 parser.read(CFG_FILE)
 
 # Startpoint Zone
-
-# Gemini API setup
-if gemini_token:
-    genai.configure(api_key=gemini_token)
-else:
-    print("Gemini API token not found in config.ini.  Gemini features will be unavailable.")
-
-
-def get_optimal_hsv(image, ball_color_name):  # New function for Gemini
-    """Uses Gemini to suggest optimal HSV values for a given ball color."""
-
-    if not gemini_token:
-        return None  # Return None if no token
-
-    prompt = f"""
-    Analyze the provided image and suggest optimal HSV color range values for detecting a {ball_color_name} ball. 
-    Provide the results in JSON format like this:
-    ```json
-    {{
-        "hmin": 0,
-        "smin": 0,
-        "vmin": 0,
-        "hmax": 180,
-        "smax": 255,
-        "vmax": 255
-    }}
-    ```
-    Consider lighting conditions and potential color variations.  The image is provided as a base64 encoded string.
-    """
-
-    # Encode the image to base64
-    _, im_bytes = cv2.imencode('.jpg', image)  # Or.png
-    im_b64 = base64.b64encode(im_bytes).decode('utf-8')
-
-    model = genai.GenerativeModel('gemini-pro-vision') # Or the model you prefer
-    response = model.generate_content(
-        [prompt, im_b64],
-        image_generation_usecase=genai.ImageGenerationUsecase.ANALYSIS
-    )
-
-    try:
-        hsv_values = ast.literal_eval(response.text)  # Safely parse JSON
-        return hsv_values
-    except (json.JSONDecodeError, SyntaxError) as e:
-        print(f"Error parsing Gemini response: {e}")
-        print(f"Gemini Response: {response.text}") # Print for debugging
-        return None
-
-# Tkinter GUI for "Get Optimal Values" button
-def open_gemini_window():
-    gemini_window = tk.Toplevel(root)  # Create a new top-level window
-    gemini_window.title("Gemini Color Optimization (BETA)")
-
-    color_name_label = ttk.Label(gemini_window, text="Ball Color Name:")
-    color_name_label.pack(pady=5)
-
-    color_name_entry = ttk.Entry(gemini_window)
-    color_name_entry.pack(pady=5)
-
-    def get_hsv_values():
-        color_name = color_name_entry.get()
-        if not color_name:
-            messagebox.showerror("Error", "Please enter a ball color name.")
-            return
-
-        hsv_result = get_optimal_hsv(origframe, color_name)  # Use origframe
-
-        if hsv_result:
-            # Update hsvVals and config.ini
-            global hsvVals
-            hsvVals = hsv_result
-            myColorFinder.setTrackbarValues(hsvVals)
-            parser.set('putting', 'customhsv', str(hsvVals))
-            parser.write(open(CFG_FILE, "w"))
-            messagebox.showinfo("Success", f"HSV values updated for {color_name}!")
-            print("HSV values changed - Custom Color Set to config.ini")
-        else:
-            messagebox.showerror("Error", "Could not get optimal HSV values from Gemini.")
-
-    get_button = ttk.Button(gemini_window, text="Get Optimal Values", command=get_hsv_values)
-    get_button.pack(pady=10)
 
 ballradius = 0
 darkness = 0
@@ -386,15 +291,7 @@ def list_ports():
 frame = cv2.imread("error.png")
 cv2.putText(frame,"Starting Video: Try MJPEG option in advanced settings for faster startup",(20,100),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255))
 outputframe = resizeWithAspectRatio(frame, width=int(args["resize"]))
-# Inside your main loop, before cv2.imshow:
-if key == ord("g"):  # Press 'g' to open Gemini window
-        open_gemini_window()
-#... (rest of your code)
 cv2.imshow("Putting View: Press q to exit / a for adv. settings", outputframe)
-
-root = tk.Tk()
-root.withdraw()  # Hide the main Tkinter window
-
 
 # Create the color Finder object set to True if you need to Find the color
 
